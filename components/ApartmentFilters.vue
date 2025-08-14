@@ -16,10 +16,11 @@
                 <span class="apartments__range-value" id="price-max">до <span class="value">12 000 000</span></span>
             </div>
             <div class="apartments__range-slider">
-                <input type="range" class="apartments__range apartments__range--min" min="3000000" max="12000000"
-                    step="100000" aria-labelledby="price-min" />
-                <input type="range" class="apartments__range apartments__range--max" min="3000000" max="12000000"
-                    step="100000" aria-labelledby="price-max" />
+                <VueSlider :process-style="{ backgroundColor: '#3EB57C', height: '3px' }"
+                    :rail-style="{ height: '3px' }"
+                    :tooltip-style="{ backgroundColor: '#3EB57C', color: 'white', fontWeight: 'bold' }"
+                    :dot-style="{ backgroundColor: '#3EB57C', boxShadow: 'none' }" class="apartments__range"
+                    v-model="priceRange" />
             </div>
         </section>
 
@@ -30,17 +31,22 @@
                 <span class="apartments__range-value" id="area-max">до <span class="value">400</span></span>
             </div>
             <div class="apartments__range-slider">
-                <input type="range" class="apartments__range apartments__range--min" min="30" max="120" step="1"
-                    aria-labelledby="area-min" />
-                <input type="range" class="apartments__range apartments__range--max" min="30" max="120" step="1"
-                    aria-labelledby="area-max" />
+                <VueSlider :process-style="{ backgroundColor: '#3EB57C', height: '3px' }"
+                    :rail-style="{ height: '3px' }"
+                    :tooltip-style="{ backgroundColor: '#3EB57C', color: 'white', fontWeight: 'bold' }"
+                    :dot-style="{ backgroundColor: '#3EB57C', boxShadow: 'none' }" class="apartments__range"
+                    v-model="areaRange" />
             </div>
         </section>
 
         <button type="button" class="apartments__reset-btn">Сбросить параметры <span>×</span></button>
     </aside>
 </template>
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import VueSlider from "vue-3-slider-component";
+const priceRange = ref([3000000, 12000000])
+const areaRange = ref([30, 120])
+</script>
 <style scoped lang="sass">
 .apartments__filters
   width: 37%
@@ -112,6 +118,7 @@
       .apartments__range-slider
 
         .apartments__range
+            
 
   .apartments__reset-btn
     background: transparent
