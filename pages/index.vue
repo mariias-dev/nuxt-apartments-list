@@ -20,7 +20,7 @@
       </button>
     </div>
 
-<ApartmentFilters></ApartmentFilters>
+  <ApartmentFilters></ApartmentFilters>
   </section>
 </template>
 

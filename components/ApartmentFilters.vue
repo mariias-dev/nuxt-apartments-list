@@ -39,7 +39,9 @@
             </div>
         </section>
 
-        <button type="button" class="apartments__reset-btn">Сбросить параметры <span>×</span></button>
+        <button type="button" class="apartments__reset-btn">Сбросить параметры
+           <img src="@/assets/icons/close.svg" />
+          </button>
     </aside>
 </template>
 <script setup lang="ts">
@@ -134,7 +136,8 @@ const areaRange = ref([30, 120])
     &:disabled
       opacity: 0.7
       cursor: not-allowed
-    span
-      font-weight: bold
-      font-size: 18px
+    img
+      width: 8px
+      height: 8px
+      margin-left: 4px
 </style>
