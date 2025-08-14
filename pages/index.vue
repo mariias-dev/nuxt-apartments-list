@@ -16,53 +16,11 @@
       </ul>
 
       <button class="apartments__more" type="button">
-        Показать ещё
+        Загрузить еще
       </button>
     </div>
 
-    <aside class="apartments__filters">
-      <section class="apartments__filter apartments__filter--rooms">
-        <h2 class="apartments__filter-title">Комнаты</h2>
-        <div class="apartments__rooms">
-          <button type="button" class="apartments__room-btn" data-rooms="1">1</button>
-          <button type="button" class="apartments__room-btn" data-rooms="2">2</button>
-          <button type="button" class="apartments__room-btn" data-rooms="3">3</button>
-          <button type="button" class="apartments__room-btn" data-rooms="4">4</button>
-        </div>
-      </section>
-
-      <section class="apartments__filter apartments__filter--price">
-        <h2 class="apartments__filter-title">Стоимость квартиры, ₽</h2>
-        <div class="apartments__range-values">
-          <span class="apartments__range-value" id="price-min">3 000 000</span>
-          <span class="apartments__range-separator">–</span>
-          <span class="apartments__range-value" id="price-max">12 000 000</span>
-        </div>
-        <div class="apartments__range-slider">
-          <input type="range" class="apartments__range apartments__range--min" min="3000000" max="12000000"
-            step="100000" aria-labelledby="price-min" />
-          <input type="range" class="apartments__range apartments__range--max" min="3000000" max="12000000"
-            step="100000" aria-labelledby="price-max" />
-        </div>
-      </section>
-
-      <section class="apartments__filter apartments__filter--area">
-        <h2 class="apartments__filter-title">Площадь, м²</h2>
-        <div class="apartments__range-values">
-          <span class="apartments__range-value" id="area-min">30</span>
-          <span class="apartments__range-separator">–</span>
-          <span class="apartments__range-value" id="area-max">120</span>
-        </div>
-        <div class="apartments__range-slider">
-          <input type="range" class="apartments__range apartments__range--min" min="30" max="120" step="1"
-            aria-labelledby="area-min" />
-          <input type="range" class="apartments__range apartments__range--max" min="30" max="120" step="1"
-            aria-labelledby="area-max" />
-        </div>
-      </section>
-
-      <button type="button" class="apartments__reset-btn">Сбросить параметры</button>
-    </aside>
+<ApartmentFilters></ApartmentFilters>
   </section>
 </template>
 
@@ -78,6 +36,7 @@ interface Apartment {
 }
 
 import { ref, onMounted } from 'vue'
+import ApartmentFilters from '~/components/ApartmentFilters.vue'
 
 const apartments = ref<Apartment[]>([])
 
@@ -124,14 +83,20 @@ onMounted(async () => {
 
     .apartments__col--area
       width: 17%
-      @media (max-width: 960px)
+      @media (min-width: 768px) and (max-width: 960px)
         padding-left: 0
+      @media (max-width: 768px)
+        width: 33%
 
     .apartments__col--floor
       width: 17%
+      @media (max-width: 768px)
+        width: 33%
 
     .apartments__col--price
       width: 17%
+      @media (max-width: 768px)
+        width: 33%
 
   &__title
     margin-bottom: 48px
@@ -143,12 +108,6 @@ onMounted(async () => {
 
   &__list
     flex: 1
-
-  &__filters
-    width: 37%
-    @media (max-width: 768px)
-      width: 100%
-      margin-top: 2rem
 
   &__more
     height: 40px
@@ -167,6 +126,7 @@ onMounted(async () => {
     @media (max-width: 768px)
       width: 100%
       text-align: center
+      height: 30px
 
 @media (max-width: 768px)
   .apartments
