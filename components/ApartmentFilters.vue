@@ -84,9 +84,13 @@ const areaRange = ref([30, 120])
           transition: all 0.2s ease-in-out
           background-color: white
           border: none
-
-          &:not(:disabled):not(.active):hover
-            background-color: #95d0a1
+          &:active
+            background-color: darken(#95D0A1, 16%)
+          @media (hover: hover) and (pointer: fine)
+            &:not(:disabled):not(.active):hover
+              background-color: darken(#95D0A1, 8%)
+              cursor: pointer
+          
 
           &.active
             background-color: #2ecc71
