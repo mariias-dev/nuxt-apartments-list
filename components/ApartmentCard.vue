@@ -82,7 +82,7 @@ const props = defineProps<{
   &__type
     @media (min-width: 960px)
       flex: 1
-      font-weight: bold
+      font-weight: 500
     
     
 

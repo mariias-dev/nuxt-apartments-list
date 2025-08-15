@@ -2,10 +2,10 @@
     <aside class="apartments__filters">
         <section class="apartments__filter apartments__filter--rooms">
             <div class="apartments__rooms">
-                <button type="button" class="apartments__room-btn" data-rooms="1">1</button>
-                <button type="button" class="apartments__room-btn active" data-rooms="2">2</button>
-                <button type="button" class="apartments__room-btn" data-rooms="3">3</button>
-                <button type="button" class="apartments__room-btn" data-rooms="4" disabled>4</button>
+                <button type="button" class="apartments__room-btn" data-rooms="1">1к</button>
+                <button type="button" class="apartments__room-btn active" data-rooms="2">2к</button>
+                <button type="button" class="apartments__room-btn" data-rooms="3">3к</button>
+                <button type="button" class="apartments__room-btn" data-rooms="4" disabled>4к</button>
             </div>
         </section>
 
@@ -16,10 +16,10 @@
                 <span class="apartments__range-value" id="price-max">до <span class="value">12 000 000</span></span>
             </div>
             <div class="apartments__range-slider">
-                <VueSlider :process-style="{ backgroundColor: '#3EB57C', height: '3px' }"
+                <VueSlider :process-style="{ backgroundColor: '#2ecc71', height: '3px' }"
                     :rail-style="{ height: '3px' }"
-                    :tooltip-style="{ backgroundColor: '#3EB57C', color: 'white', fontWeight: 'bold' }"
-                    :dot-style="{ backgroundColor: '#3EB57C', boxShadow: 'none' }" class="apartments__range"
+                    :tooltip-style="{ backgroundColor: '#2ecc71', color: 'white', fontWeight: '500' }"
+                    :dot-style="{ backgroundColor: '#2ecc71', boxShadow: 'none' }" class="apartments__range"
                     v-model="priceRange" />
             </div>
         </section>
@@ -31,16 +31,16 @@
                 <span class="apartments__range-value" id="area-max">до <span class="value">400</span></span>
             </div>
             <div class="apartments__range-slider">
-                <VueSlider :process-style="{ backgroundColor: '#3EB57C', height: '3px' }"
+                <VueSlider :process-style="{ backgroundColor: '#2ecc71', height: '3px' }"
                     :rail-style="{ height: '3px' }"
-                    :tooltip-style="{ backgroundColor: '#3EB57C', color: 'white', fontWeight: 'bold' }"
-                    :dot-style="{ backgroundColor: '#3EB57C', boxShadow: 'none' }" class="apartments__range"
+                    :tooltip-style="{ backgroundColor: '#2ecc71', color: 'white', fontWeight: '500' }"
+                    :dot-style="{ backgroundColor: '#2ecc71', boxShadow: 'none' }" class="apartments__range"
                     v-model="areaRange" />
             </div>
         </section>
 
         <button type="button" class="apartments__reset-btn">Сбросить параметры
-           <img src="@/assets/icons/close.svg" />
+           <SvgoIcon class="apartments__reset-btn-icon" name="close" />
           </button>
     </aside>
 </template>
@@ -85,11 +85,11 @@ const areaRange = ref([30, 120])
           background-color: white
           border: none
 
-          &:hover
+          &:not(:disabled):not(.active):hover
             background-color: #95d0a1
 
           &.active
-            background-color: #3EB57C
+            background-color: #2ecc71
             color: white
             box-shadow: 0px 6px 20px 0px #95D0A1
 
@@ -113,8 +113,10 @@ const areaRange = ref([30, 120])
 
         .apartments__range-value
           width: 50%
+          color: #7D7D7D
           .value
-            font-weight: bold
+            color: black
+            font-weight: 500
             margin-left: 5px
 
       .apartments__range-slider
@@ -122,22 +124,32 @@ const areaRange = ref([30, 120])
         .apartments__range
             
 
-  .apartments__reset-btn
-    background: transparent
-    border: none
-    font-size: 14px
-    margin-right: auto
-    width: fit-content
-    @media (max-width: 960px)
-      font-size: 13px
+.apartments__reset-btn
+  background: transparent
+  border: none
+  font-size: 14px
+  margin-right: auto
+  width: fit-content
+  display: flex
+  align-items: center
+  cursor: pointer
+  padding: 10px 0
+  @media (max-width: 960px)
+    font-size: 13px
 
-    &:hover
-      
-    &:disabled
-      opacity: 0.7
-      cursor: not-allowed
-    img
-      width: 8px
-      height: 8px
-      margin-left: 4px
+  &:hover
+    color: #2ecc71
+    .apartments__reset-btn-icon
+      transform: rotate(-20deg) translateX(-2px)
+      color: #2ecc71
+
+  &:disabled
+    opacity: 0.7
+    cursor: not-allowed
+
+  .apartments__reset-btn-icon
+    width: 8px
+    height: 8px
+    margin-left: 5px
+    transition: transform 0.2s ease-in-out
 </style>

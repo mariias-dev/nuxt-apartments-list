@@ -6,9 +6,29 @@
       <header class="apartments__header">
         <span class="apartments__col apartments__col--layout">Планировка</span>
         <span class="apartments__col apartments__col--type">Квартира</span>
-        <span class="apartments__col apartments__col--area">S, м²</span>
-        <span class="apartments__col apartments__col--floor">Этаж</span>
-        <span class="apartments__col apartments__col--price">Цена, ₽</span>
+        <div class="apartments__col apartments__col--area apartments__col--active apartments__col--desc">
+          S, м²
+          <button class="apartments__sort" aria-label="Сортировать по площади">
+            <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" name="caret-up" />
+            <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" name="caret-down" />
+          </button>
+        </div>
+
+        <div class="apartments__col apartments__col--floor">
+          Этаж
+          <button class="apartments__sort" aria-label="Сортировать по этажу">
+            <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" name="caret-up" />
+            <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" name="caret-down" />
+          </button>
+        </div>
+
+        <div class="apartments__col apartments__col--price">
+          Цена, ₽
+          <button class="apartments__sort" aria-label="Сортировать по цене">
+            <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" name="caret-up"  />
+            <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" name="caret-down" />
+          </button>
+        </div>
       </header>
 
       <ul class="apartments__items">
@@ -20,7 +40,7 @@
       </button>
     </div>
 
-  <ApartmentFilters></ApartmentFilters>
+    <ApartmentFilters></ApartmentFilters>
   </section>
 </template>
 
@@ -34,9 +54,6 @@ interface Apartment {
   totalFloors: number
   price: number
 }
-
-import { ref, onMounted } from 'vue'
-import ApartmentFilters from '~/components/ApartmentFilters.vue'
 
 const apartments = ref<Apartment[]>([])
 
@@ -56,14 +73,49 @@ onMounted(async () => {
   &__header
     display: flex
     font-size: 14px
+    @media (max-width: 768px)
+      gap: 16px
 
     .apartments__col
       flex-shrink: 0
       padding: 0 10px
       height: 20px
       margin-bottom: 16px
+      display: flex
+      gap: 4px
       @media (max-width: 960px)
         margin: 8px 0
+      .apartments__sort-arrow
+        color: #7D7D7D
+        transition: color 0.2s ease-in-out
+
+      &--active
+        color: #3EB57C
+
+        .apartments__sort-arrow
+          color: #D0D0D0
+
+      &--asc
+        .apartments__sort-arrow--up
+          color: #3EB57C
+
+      &--desc
+        .apartments__sort-arrow--down
+          color: #3EB57C
+
+      .apartments__sort
+        display: flex
+        flex-direction: column
+        cursor: pointer
+        align-items: center
+        background-color: transparent
+        border: none
+        justify-content: center
+        gap: 2px
+
+        .apartments__sort-arrow
+          &--up
+            margin-left: 10%
 
     .apartments__col:first-child
       padding-left: 0
@@ -85,18 +137,18 @@ onMounted(async () => {
       width: 17%
       @media (min-width: 768px) and (max-width: 960px)
         padding-left: 0
-      @media (max-width: 768px)
-        width: 33%
+      @media (max-width: 960px)
+        width: fit-content
 
     .apartments__col--floor
       width: 17%
-      @media (max-width: 768px)
-        width: 33%
+      @media (max-width: 960px)
+        width: fit-content
 
     .apartments__col--price
       width: 17%
-      @media (max-width: 768px)
-        width: 33%
+      @media (max-width: 960px)
+        width: fit-content
 
   &__title
     margin-bottom: 48px

@@ -1,7 +1,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@pinia/nuxt'],
+  modules: ['@pinia/nuxt', 'nuxt-svgo-loader'],
   css: [
     '~/assets/styles/fonts.sass',
     '~/assets/styles/main.sass',
