@@ -25,7 +25,7 @@
         <div class="apartments__col apartments__col--price">
           Цена, ₽
           <button class="apartments__sort" aria-label="Сортировать по цене">
-            <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" name="caret-up"  />
+            <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" name="caret-up" />
             <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" name="caret-down" />
           </button>
         </div>
@@ -41,6 +41,10 @@
     </div>
 
     <ApartmentFilters></ApartmentFilters>
+    <button 
+    @click="scrollToTop" class="apartments__to-top" type="button" aria-label="Прокрутить вверх" :class="{ 'apartments__to-top--hidden': !showScrollButton }"> 
+      <SvgoIcon class="apartments__to-top-icon" name="arrow" />
+    </button>
   </section>
 </template>
 
@@ -56,6 +60,23 @@ interface Apartment {
 }
 
 const apartments = ref<Apartment[]>([])
+const showScrollButton = ref(false)
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+onMounted(() => {
+  const onScroll = () => {
+    showScrollButton.value = window.scrollY > 200
+  }
+  window.addEventListener('scroll', onScroll)
+  onScroll()
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('scroll', onScroll)
+  })
+})
 
 onMounted(async () => {
   const res = await fetch('/data/apartments.json')
@@ -69,6 +90,31 @@ onMounted(async () => {
   gap: 80px
   @media (max-width: 960px)
     gap: 28px
+  &__to-top
+    position: fixed
+    bottom: 32px
+    right: 32px
+    z-index: 1000
+    cursor: pointer
+    width: 40px
+    height: 40px
+    border-radius: 50%
+    background-color: #95D0A1
+    display: flex
+    align-items: center
+    justify-content: center
+    border: none
+    opacity: 1
+    transform: translateY(0)
+    transition: opacity 0.3s ease, transform 0.3s ease
+    &--hidden
+      opacity: 0
+      transform: translateY(100px)
+    @media (max-width: 960px)
+      right: 16px
+      bottom: 16px
+      width: 35px
+      height: 35px
 
   &__header
     display: flex
