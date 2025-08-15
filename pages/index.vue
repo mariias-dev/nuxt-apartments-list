@@ -2,59 +2,72 @@
   <section class="apartments">
     <div class="apartments__list">
       <h1 class="apartments__title">Квартиры</h1>
+      <transition name="fade-list" mode="out-in">
+      <div v-if="!isApartmentsLoading && apartments.length">
+        <header class="apartments__header">
+          <span class="apartments__col apartments__col--layout">Планировка</span>
+          <span class="apartments__col apartments__col--type">Квартира</span>
 
-      <header class="apartments__header">
-        <span class="apartments__col apartments__col--layout">Планировка</span>
-        <span class="apartments__col apartments__col--type">Квартира</span>
+          <div class="apartments__col apartments__col--area apartments__col--active apartments__col--desc">
 
-        <div class="apartments__col apartments__col--area apartments__col--active apartments__col--desc">
+            <button class="apartments__sort" type="button" title="Сортировать по площади">
+              <span>S, м²</span>
+              <div class="apartments__sort-arrows">
+                <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true"
+                  name="caret-up" />
+                <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
+                  name="caret-down" />
+              </div>
 
-          <button class="apartments__sort" type="button" title="Сортировать по площади">
-            <span>S, м²</span>
-            <div class="apartments__sort-arrows">
-              <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true" name="caret-up" />
-              <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
-                name="caret-down" />
-            </div>
+            </button>
+          </div>
 
-          </button>
-        </div>
+          <div class="apartments__col apartments__col--floor">
 
-        <div class="apartments__col apartments__col--floor">
+            <button class="apartments__sort" type="button" title="Сортировать по этажу">
+              <span>Этаж</span>
+              <div class="apartments__sort-arrows">
+                <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true"
+                  name="caret-up" />
+                <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
+                  name="caret-down" />
+              </div>
+            </button>
+          </div>
 
-          <button class="apartments__sort" type="button" title="Сортировать по этажу">
-            <span>Этаж</span>
-            <div class="apartments__sort-arrows">
-              <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true" name="caret-up" />
-              <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
-                name="caret-down" />
-            </div>
-          </button>
-        </div>
-
-        <div class="apartments__col apartments__col--price">
+          <div class="apartments__col apartments__col--price">
 
 
-          <button class="apartments__sort" type="button" title="Сортировать по цене">
-            <span>Цена, ₽</span>
-            <div class="apartments__sort-arrows">
-              <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true" name="caret-up" />
-              <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
-                name="caret-down" />
-            </div>
+            <button class="apartments__sort" type="button" title="Сортировать по цене">
+              <span>Цена, ₽</span>
+              <div class="apartments__sort-arrows">
+                <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true"
+                  name="caret-up" />
+                <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
+                  name="caret-down" />
+              </div>
 
-          </button>
-        </div>
-      </header>
+            </button>
+          </div>
+        </header>
 
-      <ul class="apartments__items">
-        <ApartmentCard v-for="apartment in apartments" :key="apartment.id" :apartment="apartment" />
-      </ul>
+        <ul class="apartments__items" key="list">
+          <ApartmentCard v-for="apartment in apartments" :key="apartment.id" :apartment="apartment" />
+        </ul>
 
-      <button :disabled="isApartmentsLoading" :aria-busy="isApartmentsLoading" class="apartments__more" type="button">
-        <span v-if="!isApartmentsLoading">Загрузить еще</span>
-        <span v-else>...</span>
-      </button>
+        <button v-if="!isApartmentsLoading" :disabled="isLoadingMore" :aria-busy="isLoadingMore"
+          class="apartments__more" type="button">
+          <span v-if="!isLoadingMore">Загрузить еще</span>
+          <span v-else>...</span>
+        </button>
+      </div>
+      <div v-else-if="isApartmentsLoading" class="spinner" key="spinner">
+        <div class="spinner__circle"></div>
+      </div>
+      <div v-else class="apartments__empty" key="empty">
+        Нет доступных квартир
+      </div>
+      </transition>
     </div>
 
     <ApartmentFilters></ApartmentFilters>
@@ -66,19 +79,15 @@
 </template>
 
 <script setup lang="ts">
-interface Apartment {
-  id: number
-  plan: string
-  type: string
-  area: number
-  floor: number
-  totalFloors: number
-  price: number
-}
+import { useApartmentsStore } from '@/stores/apartments'
+import { storeToRefs } from 'pinia'
 
-const apartments = ref<Apartment[]>([])
+const apartmentsStore = useApartmentsStore()
+const { apartments, loading: isApartmentsLoading } = storeToRefs(apartmentsStore)
+
+apartmentsStore.fetchApartments()
+
 const showScrollButton = ref(false)
-const isApartmentsLoading = ref(false)
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -95,10 +104,6 @@ onMounted(() => {
   })
 })
 
-onMounted(async () => {
-  const res = await fetch('/data/apartments.json')
-  apartments.value = await res.json()
-})
 </script>
 
 <style scoped lang="sass">
@@ -129,11 +134,11 @@ onMounted(async () => {
 
     @media (hover: hover) and (pointer: fine)
       &:hover
-        background-color: darken(#95D0A1, 8%)
+        background-color: #89BF94
         box-shadow: 0 4px 12px rgba(0,0,0,0.15)
 
     &:active
-      background-color: darken(#95D0A1, 16%)
+      background-color: #7DAE87
 
     &:focus-visible
       outline: 2px solid #2E7D32
@@ -269,7 +274,7 @@ onMounted(async () => {
       background-color: transparent
 
     &:hover:active:not(:disabled)
-      background-color: darken(#95D0A1, 16%)
+      background-color: #7DAE87
 
 
     &:focus-visible
@@ -278,7 +283,7 @@ onMounted(async () => {
 
     @media (hover: hover) and (pointer: fine)
       &:hover:not(:disabled)
-        background-color: darken(#95D0A1, 8%)
+        background-color: #89BF94
 
     @media (max-width: 768px)
       width: 100%
@@ -288,4 +293,41 @@ onMounted(async () => {
 @media (max-width: 768px)
   .apartments
     flex-direction: column-reverse
+
+.spinner
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  min-height: 400px
+  gap: 12px
+  @media (max-width: 768px)
+    min-height: fit-content
+    margin-top: 50px
+  &__circle
+    width: 40px
+    height: 40px
+    border: 4px solid rgba(0, 0, 0, 0.1)
+    border-top-color: #3EB57C
+    border-radius: 50%
+    animation: spin 1s linear infinite
+
+@keyframes spin
+  to
+    transform: rotate(360deg)
+
+.fade-list-enter-active,
+.fade-list-leave-active 
+  transition: all 0.3s ease
+
+
+.fade-list-enter-from
+  opacity: 0
+  transform: translateY(20px)
+
+.fade-list-leave-to 
+  opacity: 0
+  transform: translateY(-20px)
+
+
 </style>

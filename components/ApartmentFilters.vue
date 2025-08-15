@@ -46,8 +46,6 @@
 </template>
 <script setup lang="ts">
 import VueSlider from "vue-3-slider-component";
-const priceRange = ref([3000000, 12000000])
-const areaRange = ref([30, 120])
 </script>
 <style scoped lang="sass">
 .apartments__filters
@@ -85,10 +83,10 @@ const areaRange = ref([30, 120])
           background-color: white
           border: none
           &:active
-            background-color: darken(#95D0A1, 16%)
+            background-color: #7DAE87
           @media (hover: hover) and (pointer: fine)
             &:not(:disabled):not(.active):hover
-              background-color: darken(#95D0A1, 8%)
+              background-color: #89BF94
               cursor: pointer
           
 
@@ -122,10 +120,6 @@ const areaRange = ref([30, 120])
             color: black
             font-weight: 500
             margin-left: 5px
-
-      .apartments__range-slider
-
-        .apartments__range
             
 
 .apartments__reset-btn

@@ -60,8 +60,6 @@ const props = defineProps<{
   &:last-child
     border-bottom: 1px solid #0000001A
 
-  &:hover
-
   &__plan
     aspect-ratio: 1 / 1
     width: 80px
