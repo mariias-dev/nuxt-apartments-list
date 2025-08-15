@@ -12,15 +12,15 @@
 
     <div class="apartment-card__details">
       <span class="apartment-card__area">
-        {{ props.apartment.area }}
+        {{ props.apartment.area }} <span  class="apartment-card__unit-area">м²</span>
       </span>
 
       <span class="apartment-card__floor">
-        {{ props.apartment.floor }} <span>из {{ props.apartment.totalFloors }}</span>
+        {{ props.apartment.floor }} <span>из {{ props.apartment.totalFloors }} <span  class="apartment-card__unit-floor">этаж</span></span>
       </span>
 
       <span class="apartment-card__price">
-        {{ formatPrice(props.apartment.price) }}
+        {{ formatPrice(props.apartment.price) }} <span  class="apartment-card__unit-price">₽</span>
       </span>
     </div>
   </div>
@@ -112,6 +112,13 @@ const props = defineProps<{
     @media (max-width: 1300px)
       width: 59%
       gap: 20px
+    @media (max-width: 960px)
+      width: 100%
 
+.apartment-card__unit-area,
+.apartment-card__unit-floor,
+.apartment-card__unit-price
+  @media (min-width: 960px)
+    display: none
 
 </style>
