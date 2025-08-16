@@ -9,7 +9,7 @@ export const useApartmentsStore = defineStore('apartments', () => {
   const loaded = ref<boolean>(false)
 
   const fetchApartments = async (forceRefresh = false) => {
-    if (loaded.value && !forceRefresh) return
+    if ((loaded.value && !forceRefresh) || loading.value) return
     
     loading.value = true
     error.value = null
@@ -19,6 +19,8 @@ export const useApartmentsStore = defineStore('apartments', () => {
       if (!res.ok) throw new Error(`Ошибка при загрузке данных: ${res.status} ${res.statusText}`)
       
       const data: Apartment[] = await res.json()
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
       apartments.value = data
       loaded.value = true
     } catch (err: unknown) {
@@ -34,6 +36,7 @@ export const useApartmentsStore = defineStore('apartments', () => {
     apartments,
     loading,
     error,
+    loaded,
     fetchApartments
   }
 })

@@ -3,70 +3,73 @@
     <div class="apartments__list">
       <h1 class="apartments__title">Квартиры</h1>
       <transition name="fade-list" mode="out-in">
-      <div v-if="!isApartmentsLoading && apartments.length">
-        <header class="apartments__header">
-          <span class="apartments__col apartments__col--layout">Планировка</span>
-          <span class="apartments__col apartments__col--type">Квартира</span>
+        <div v-if="!loading && apartments.length">
+          <header class="apartments__header">
+            <span class="apartments__col apartments__col--layout">Планировка</span>
+            <span class="apartments__col apartments__col--type">Квартира</span>
 
-          <div class="apartments__col apartments__col--area apartments__col--active apartments__col--desc">
+            <div class="apartments__col apartments__col--area apartments__col--active apartments__col--desc">
 
-            <button class="apartments__sort" type="button" title="Сортировать по площади">
-              <span>S, м²</span>
-              <div class="apartments__sort-arrows">
-                <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true"
-                  name="caret-up" />
-                <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
-                  name="caret-down" />
-              </div>
+              <button class="apartments__sort" type="button" title="Сортировать по площади">
+                <span>S, м²</span>
+                <div class="apartments__sort-arrows">
+                  <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true"
+                    name="caret-up" />
+                  <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
+                    name="caret-down" />
+                </div>
 
-            </button>
-          </div>
+              </button>
+            </div>
 
-          <div class="apartments__col apartments__col--floor">
+            <div class="apartments__col apartments__col--floor">
 
-            <button class="apartments__sort" type="button" title="Сортировать по этажу">
-              <span>Этаж</span>
-              <div class="apartments__sort-arrows">
-                <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true"
-                  name="caret-up" />
-                <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
-                  name="caret-down" />
-              </div>
-            </button>
-          </div>
+              <button class="apartments__sort" type="button" title="Сортировать по этажу">
+                <span>Этаж</span>
+                <div class="apartments__sort-arrows">
+                  <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true"
+                    name="caret-up" />
+                  <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
+                    name="caret-down" />
+                </div>
+              </button>
+            </div>
 
-          <div class="apartments__col apartments__col--price">
+            <div class="apartments__col apartments__col--price">
 
 
-            <button class="apartments__sort" type="button" title="Сортировать по цене">
-              <span>Цена, ₽</span>
-              <div class="apartments__sort-arrows">
-                <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true"
-                  name="caret-up" />
-                <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
-                  name="caret-down" />
-              </div>
+              <button class="apartments__sort" type="button" title="Сортировать по цене">
+                <span>Цена, ₽</span>
+                <div class="apartments__sort-arrows">
+                  <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true"
+                    name="caret-up" />
+                  <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
+                    name="caret-down" />
+                </div>
 
-            </button>
-          </div>
-        </header>
+              </button>
+            </div>
+          </header>
 
-        <ul class="apartments__items" key="list">
-          <ApartmentCard v-for="apartment in apartments" :key="apartment.id" :apartment="apartment" />
-        </ul>
+          <ul class="apartments__items" key="list">
+            <ApartmentCard v-for="apartment in apartments" :key="apartment.id" :apartment="apartment" />
+          </ul>
 
-        <button v-if="!isApartmentsLoading" :disabled="isLoadingMore" :aria-busy="isLoadingMore"
-          class="apartments__more" type="button">
-          <span v-if="!isLoadingMore">Загрузить еще</span>
-          <span v-else>...</span>
-        </button>
-      </div>
-      <div v-else-if="isApartmentsLoading" class="spinner" key="spinner">
-        <div class="spinner__circle"></div>
-      </div>
-      <div v-else class="apartments__empty" key="empty">
-        Нет доступных квартир
-      </div>
+          <button :disabled="isLoadingMore" :aria-busy="isLoadingMore"
+            class="apartments__more" type="button">
+            <span v-if="!isLoadingMore">Загрузить еще</span>
+            <span v-else>...</span>
+          </button>
+        </div>
+        <div v-else-if="loading" class="spinner" key="spinner">
+          <div class="spinner__circle"></div>
+        </div>
+        <div v-else-if="error" class="apartments__error" key="error">
+          Произошла ошибка при загрузке данных
+        </div>
+        <div v-else-if="apartmentsStore.loaded && !apartments.length" class="apartments__empty" key="empty">
+          Нет доступных квартир
+        </div>
       </transition>
     </div>
 
@@ -79,13 +82,16 @@
 </template>
 
 <script setup lang="ts">
-import { useApartmentsStore } from '@/stores/apartments'
 import { storeToRefs } from 'pinia'
+import { useApartmentsStore } from '@/stores/apartments'
 
 const apartmentsStore = useApartmentsStore()
-const { apartments, loading: isApartmentsLoading } = storeToRefs(apartmentsStore)
+const { apartments, loading, error } = storeToRefs(apartmentsStore)
+const { fetchApartments } = apartmentsStore
 
-apartmentsStore.fetchApartments()
+onMounted(() => {
+  fetchApartments()
+})
 
 const showScrollButton = ref(false)
 function scrollToTop() {
