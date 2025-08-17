@@ -6,76 +6,101 @@
         <span role="columnheader" class="apartments__col apartments__col--layout">Планировка</span>
         <span role="columnheader" class="apartments__col apartments__col--type">Квартира</span>
 
-        <div role="columnheader" class="apartments__col apartments__col--area" :aria-sort="areaSortStatus"
-          :class="areaColClasses">
-          <button class="apartments__sort" type="button" title="Сортировать по площади" @click="toggleSort('area')">
+        <div 
+          role="columnheader" 
+          class="apartments__col apartments__col--area" 
+          :aria-sort="areaSortStatus"
+          :class="areaColClasses"
+        >
+          <button class="apartments__sort" type="button" title="Сортировать по площади" @click="toggleSort(Columns.Area)">
             <span>S, м²</span>
             <div class="apartments__sort-arrows">
               <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" :class="{
                 active:
-                  store.filters.sortBy === 'area' &&
-                  store.filters.sortDir === 'asc',
+                  store.filters.sortBy === Columns.Area &&
+                  store.filters.sortDir === SortDirection.Asc,
               }" name="caret-up" />
               <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" :class="{
                 active:
-                  store.filters.sortBy === 'area' &&
-                  store.filters.sortDir === 'desc',
+                  store.filters.sortBy === Columns.Area &&
+                  store.filters.sortDir === SortDirection.Desc,
               }" name="caret-down" />
             </div>
           </button>
         </div>
 
-        <div role="columnheader" class="apartments__col apartments__col--floor" :aria-sort="floorSortStatus"
-          :class="floorColClasses">
-          <button class="apartments__sort" type="button" title="Сортировать по этажу" @click="toggleSort('floor')">
+        <div 
+          role="columnheader" 
+          class="apartments__col apartments__col--floor" 
+          :aria-sort="floorSortStatus"
+          :class="floorColClasses"
+        >
+          <button class="apartments__sort" type="button" title="Сортировать по этажу" @click="toggleSort(Columns.Floor)">
             <span>Этаж</span>
             <div class="apartments__sort-arrows">
               <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" :class="{
                 active:
-                  store.filters.sortBy === 'floor' &&
-                  store.filters.sortDir === 'asc',
+                  store.filters.sortBy === Columns.Floor &&
+                  store.filters.sortDir === SortDirection.Asc,
               }" name="caret-up" />
               <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" :class="{
                 active:
-                  store.filters.sortBy === 'floor' &&
-                  store.filters.sortDir === 'desc',
+                  store.filters.sortBy === Columns.Floor &&
+                  store.filters.sortDir === SortDirection.Desc,
               }" name="caret-down" />
             </div>
           </button>
         </div>
 
-        <div role="columnheader" class="apartments__col apartments__col--price" :aria-sort="priceSortStatus"
-          :class="priceColClasses">
-          <button class="apartments__sort" type="button" title="Сортировать по цене" @click="toggleSort('price')">
+        <div 
+          role="columnheader" 
+          class="apartments__col apartments__col--price" 
+          :aria-sort="priceSortStatus"
+          :class="priceColClasses"
+        >
+          <button class="apartments__sort" type="button" title="Сортировать по цене" @click="toggleSort(Columns.Price)">
             <span>Цена, ₽</span>
             <div class="apartments__sort-arrows">
               <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" :class="{
                 active:
-                  store.filters.sortBy === 'price' &&
-                  store.filters.sortDir === 'asc',
+                  store.filters.sortBy === Columns.Floor &&
+                  store.filters.sortDir === SortDirection.Asc,
               }" name="caret-up" />
               <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" :class="{
                 active:
-                  store.filters.sortBy === 'price' &&
-                  store.filters.sortDir === 'desc',
+                  store.filters.sortBy === Columns.Floor &&
+                  store.filters.sortDir === SortDirection.Desc,
               }" name="caret-down" />
             </div>
           </button>
         </div>
       </header>
       <transition name="fade-list" mode="out-in">
-        <div v-if="store.initialLoading" aria-live="polite" role="status" class="spinner" key="spinner">
-          <div class="spinner__circle"></div>
-        </div>
+        <UiSpinner v-if="store.initialLoading" class="apartments__loader"></UiSpinner>
 
         <div v-else-if="store.apartments.length">
-          <ul role="rowgroup" class="apartments__items" key="list">
-            <ApartmentCard v-for="apartment in store.apartments" :key="apartment.id" :apartment="apartment" />
-          </ul>
+          <transition-group
+            name="fade-slide"
+            tag="ul"
+            role="rowgroup"
+            class="apartments__items"
+            key="list"
+          >
+            <ApartmentCard
+              v-for="(apartment, i) in store.apartments"
+              :key="apartment.id"
+              :apartment="apartment"
+              :style="{ '--i': i - (store.apartments.length - store.pagination.perPage) }"
+            />
+          </transition-group>
 
-          <button v-if="
-            !store.loading && store.apartments.length < store.pagination.total
-          " :disabled="store.loading" class="apartments__more" type="button" @click="loadMore">
+          <button 
+            v-if="!store.loading && store.apartments.length < store.pagination.total" 
+            :disabled="store.loading" 
+            class="apartments__more" 
+            type="button" 
+            @click="loadMoreApartments"
+          >
             <span>Загрузить еще</span>
           </button>
         </div>
@@ -101,33 +126,46 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useApartmentsStore } from "@/stores/apartments";
+import { Columns, SortDirection } from '~/types/apartment';
 
 const store = useApartmentsStore();
 const { apartments, fetchApartments, loadMore, toggleSort } = store;
 
+async function loadMoreApartments() {
+  await loadMore();
+
+  requestAnimationFrame(() => {
+    const offset = window.innerHeight * 0.6;
+    window.scrollBy({
+      top: offset,
+      behavior: "smooth",
+    });
+  });
+}
+
 const showScrollButton = ref(false);
 
-const getSortStatus = (column: 'area' | 'floor' | 'price') => computed(() => {
-  if (store.filters.sortBy !== 'area') return 'none';
-  return store.filters.sortDir === 'asc'
+const getSortStatus = (column: Columns) => computed(() => {
+  if (store.filters.sortBy !== column) return 'none';
+  return store.filters.sortDir === SortDirection.Asc
     ? 'ascending'
-    : store.filters.sortDir === 'desc'
+    : store.filters.sortDir === SortDirection.Desc
       ? 'descending'
       : 'none';
 });
-const areaSortStatus = getSortStatus('area');
-const floorSortStatus = getSortStatus('floor');
-const priceSortStatus = getSortStatus('price');
+const areaSortStatus = getSortStatus(Columns.Area);
+const floorSortStatus = getSortStatus(Columns.Floor);
+const priceSortStatus = getSortStatus(Columns.Price);
 
-const getColumnClasses = (column: 'area' | 'floor' | 'price') => computed(() => ({
+const getColumnClasses = (column: Columns) => computed(() => ({
   'apartments__col--active': store.filters.sortBy === column,
-  'apartments__col--desc': store.filters.sortBy === column && store.filters.sortDir === 'desc',
-  'apartments__col--asc': store.filters.sortBy === column && store.filters.sortDir === 'asc'
+  'apartments__col--desc': store.filters.sortBy === column && store.filters.sortDir === SortDirection.Desc,
+  'apartments__col--asc': store.filters.sortBy === column && store.filters.sortDir === SortDirection.Asc,
 }));
 
-const areaColClasses = getColumnClasses('area');
-const floorColClasses = getColumnClasses('floor');
-const priceColClasses = getColumnClasses('price');
+const areaColClasses = getColumnClasses(Columns.Area);
+const floorColClasses = getColumnClasses(Columns.Floor);
+const priceColClasses = getColumnClasses(Columns.Price);
 
 function handleScroll() {
   showScrollButton.value = window.scrollY > 200;
@@ -152,6 +190,21 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="sass">
+.fade-slide-enter-active
+  transition: all 1s ease
+  transition-delay: calc(var(--i) * 150ms) 
+
+.fade-slide-leave-active
+  transition: all 0.5s ease
+
+.fade-slide-enter-from
+  opacity: 0
+  transform: translateY(30px)
+
+.fade-slide-enter-to
+  opacity: 1
+  transform: translateY(0)
+
 .apartments
   display: flex
   gap: 80px
@@ -160,7 +213,8 @@ onBeforeUnmount(() => {
     text-align: center
     color: #7D7D7D
     margin-top: 50px
-
+  @media (max-width: 1130px)
+    gap: 24px
   @media (max-width: 960px)
     gap: 28px
 
@@ -205,6 +259,11 @@ onBeforeUnmount(() => {
       bottom: 16px
       width: 35px
       height: 35px
+
+  &__loader
+    margin-top: 100px
+    @media (max-width: 768px) 
+      margin-top: 50px
 
   &__header
     display: flex
@@ -310,6 +369,7 @@ onBeforeUnmount(() => {
     width: 156px
     border-radius: 25px
     cursor: pointer
+    font-weight: 500
     border: 1px solid rgba(11, 23, 57, 0.2)
     background: transparent
     margin-top: 48px
@@ -344,47 +404,4 @@ onBeforeUnmount(() => {
 @media (max-width: 768px)
   .apartments
     flex-direction: column-reverse
-
-.spinner
-  display: flex
-  flex-direction: column
-  align-items: center
-  justify-content: center
-  min-height: 400px
-  gap: 12px
-  @media (max-width: 768px)
-    min-height: fit-content
-    margin-top: 50px
-  &__circle
-    width: 40px
-    height: 40px
-    border: 4px solid rgba(0, 0, 0, 0.1)
-    border-top-color: #3EB57C
-    border-radius: 50%
-    animation: spin 1s linear infinite
-
-@keyframes spin
-  to
-    transform: rotate(360deg)
-
-.fade-list-enter-active
-  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1) // пружинящий эффект
-.fade-list-leave-active
-  transition: all 0.25s ease-in
-
-.fade-list-enter-from
-  opacity: 0
-  transform: translateY(30px) scale(0.95) rotateX(10deg)
-
-.fade-list-enter-to
-  opacity: 1
-  transform: translateY(0) scale(1) rotateX(0)
-
-.fade-list-leave-from
-  opacity: 1
-  transform: translateY(0) scale(1) rotateX(0)
-
-.fade-list-leave-to
-  opacity: 0
-  transform: translateY(-20px) scale(0.9) rotateX(-5deg)
 </style>

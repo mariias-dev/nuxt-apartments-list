@@ -8,14 +8,25 @@ export interface Apartment {
   price: number
 }
 
+export enum Columns {
+  Area = 'area',
+  Floor = 'floor',
+  Price = 'price'
+}
+
+export enum SortDirection {
+  Asc = 'asc',
+  Desc = 'desc'
+}
+
 export interface ApartmentFilters {
   minPrice?: number;
   maxPrice?: number;
   minArea?: number;
   maxArea?: number;
-  rooms: number[];
-  sortBy?: 'area' | 'floor' | 'price';
-  sortDir?: 'asc' | 'desc';
+  rooms?: number[];
+  sortBy?: Columns;
+  sortDir?: SortDirection;
 }
 
 export interface ApartmentStats {

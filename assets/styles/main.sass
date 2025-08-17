@@ -5,7 +5,7 @@
     padding: 0
     box-sizing: border-box
 
-body, button, input
+body, button
     font-family: 'PT Root UI', sans-serif
     font-weight: 400
     font-size: 16px
@@ -26,7 +26,31 @@ h1
     max-width: 1440px
     margin: 0 auto
     padding: 96px 80px
+    @media (max-width: 1130px)
+        padding: 40px
     @media (max-width: 960px)
         padding: 48px 54px
     @media (max-width: 768px)
         padding: 24px 16px
+
+    
+.fade-list-enter-active
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1)
+.fade-list-leave-active
+  transition: all 0.25s ease-in
+
+.fade-list-enter-from
+  opacity: 0
+  transform: translateY(30px) scale(0.95) rotateX(10deg)
+
+.fade-list-enter-to
+  opacity: 1
+  transform: translateY(0) scale(1) rotateX(0)
+
+.fade-list-leave-from
+  opacity: 1
+  transform: translateY(0) scale(1) rotateX(0)
+
+.fade-list-leave-to
+  opacity: 0
+  transform: translateY(-20px) scale(0.9) rotateX(-5deg)

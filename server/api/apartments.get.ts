@@ -15,8 +15,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse> => {
   const apartments: Apartment[] = JSON.parse(await readFile(filePath, 'utf-8'));
 
   const roomFiltered = applyRoomFilter(apartments, parseNumberArray(query.rooms?.toString()));
-  
-  const baseStats = getBaseStats(roomFiltered, apartments);
 
   const fullyFiltered = applyOtherFilters(roomFiltered, {
     minPrice: query.minPrice ? Number(query.minPrice) : undefined,
@@ -33,25 +31,23 @@ export default defineEventHandler(async (event): Promise<ApiResponse> => {
   return {
     data: paginated,
     pagination,
-    stats: {
-      ...baseStats,
-      availableRooms: Array.from(new Set(apartments.map(a => a.rooms))).sort((a, b) => a - b),
-    }
+    stats: getStats(roomFiltered, apartments),
   };
 });
 
-function applyRoomFilter(apartments: Apartment[], rooms: number[]): Apartment[] {
-  if (!rooms.length) return [...apartments];
-  return apartments.filter(a => rooms.includes(a.rooms));
-}
-
-function getBaseStats(filtered: Apartment[], allApartments: Apartment[]): Omit<ApartmentStats, 'availableRooms'> {
+function getStats(filtered: Apartment[], allApartments: Apartment[]): ApartmentStats {
   return {
     minPrice: filtered.length ? Math.min(...filtered.map(a => a.price)) : 0,
     maxPrice: filtered.length ? Math.max(...filtered.map(a => a.price)) : 0,
     minArea: filtered.length ? Math.min(...filtered.map(a => a.area)) : 0,
     maxArea: filtered.length ? Math.max(...filtered.map(a => a.area)) : 0,
+    availableRooms: [...new Set(allApartments.map(a => a.rooms))].sort((a, b) => a - b),
   };
+}
+
+function applyRoomFilter(apartments: Apartment[], rooms: number[]): Apartment[] {
+  if (!rooms.length) return [...apartments];
+  return apartments.filter(a => rooms.includes(a.rooms));
 }
 
 function applyOtherFilters(apartments: Apartment[], filters: Omit<ApartmentFilters, 'rooms'>): Apartment[] {

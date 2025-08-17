@@ -1,50 +1,71 @@
 <template>
   <aside class="apartments__filters">
-    <section class="apartments__filter apartments__filter--rooms">
-      <div class="apartments__rooms">
-        <button v-for="n in availableRooms" :key="n" type="button" class="apartments__room-btn"
-          :class="{ active: filters.rooms.includes(n) }" @click="toggleRoom(n)">
-          {{ n }}к
-        </button>
-      </div>
-    </section>
+    <transition name="fade-list" mode="out-in">
+      <UiSpinner v-if="!store.stats" class="apartments__filters--loader"></UiSpinner>
 
-    <section class="apartments__filter apartments__filter--price">
-      <h2 class="apartments__filter-title">Стоимость квартиры, ₽</h2>
-      <div class="apartments__range-values">
-        <span class="apartments__range-value" id="price-min">от {{ formatNumber(priceRange[0]) }}</span>
-        <span class="apartments__range-value" id="price-max"> до {{ formatNumber(priceRange[1]) }}</span>
-      </div>
-      <div class="apartments__range-slider">
-        <VueSlider v-if="slidersReady && stats" v-model="priceRange" :disabled="priceBounds[0] === priceBounds[1]"
-          :min="priceBounds[0]" :max="priceBounds[1]" :interval="priceInterval" :tooltip-formatter="formatPriceTooltip"
-          :dot-style="{ backgroundColor: '#2ecc71', boxShadow: 'none' }" class="apartments__range"
-          :process-style="{ backgroundColor: '#2ecc71', height: '3px' }" :rail-style="{ height: '3px' }"
-          :tooltip-style="{ backgroundColor: '#2ecc71', color: 'white', fontWeight: '500' }"
-          @change="handlePriceChange" />
-      </div>
-    </section>
+      <div v-else class="apartments__filters--content">
+          <section class="apartments__filter apartments__filter--rooms">
+            <div class="apartments__rooms">
+              <button v-for="n in availableRooms" :key="n" type="button" class="apartments__room-btn"
+                :class="{ active: filters.rooms?.includes(n) }" @click="toggleRoom(n)">
+                {{ n }}к
+              </button>
+            </div>
+          </section>
 
-    <section class="apartments__filter apartments__filter--area">
-      <h2 class="apartments__filter-title">Площадь, м²</h2>
-      <div class="apartments__range-values">
-        <span class="apartments__range-value" id="area-min">от {{ areaRange[0] }}</span>
-        <span class="apartments__range-value" id="area-max">до {{ areaRange[1] }}</span>
-      </div>
-      <div class="apartments__range-slider">
-        <VueSlider v-if="slidersReady && stats" v-model="areaRange" :disabled="areaBounds[0] === areaBounds[1]"
-          :min="areaBounds[0]" :max="areaBounds[1]" :interval="areaInterval"
-          :process-style="{ backgroundColor: '#2ecc71', height: '3px' }" :rail-style="{ height: '3px' }"
-          :dot-style="{ backgroundColor: '#2ecc71', boxShadow: 'none' }" class="apartments__range"
-          :tooltip-style="{ backgroundColor: '#2ecc71', color: 'white', fontWeight: '500' }"
-          @change="handleAreaChange" />
-      </div>
-    </section>
+          <section class="apartments__filter apartments__filter--price">
+            <h2 class="apartments__filter-title">Стоимость квартиры, ₽</h2>
+            <div class="apartments__range-values">
+              <span class="apartments__range-value" id="price-min">от <span class="value">{{ formatNumber(priceRange[0]) }}</span></span>
+              <span class="apartments__range-value" id="price-max"> до <span class="value">{{ formatNumber(priceRange[1]) }}</span></span>
+            </div>
+            <div class="apartments__range-slider">
+              <VueSlider 
+                v-if="slidersReady && stats" 
+                class="apartments__range"
+                v-model="priceRange" 
+                :disabled="priceBounds[0] === priceBounds[1]"
+                :min="priceBounds[0]" 
+                :max="priceBounds[1]" 
+                :interval="priceInterval" 
+                :tooltip-formatter="formatPriceTooltip"
+                :dot-style="{ backgroundColor: '#3EB57C', boxShadow: 'none' }" 
+                :process-style="{ backgroundColor: '#3EB57C', height: '3px' }" 
+                :rail-style="{ height: '3px' }"
+                :tooltip-style="{ backgroundColor: '#3EB57C', color: 'white', fontWeight: '500' }"
+                @change="handlePriceChange" />
+            </div>
+          </section>
 
-    <button type="button" class="apartments__reset-btn" @click="resetFilters" :disabled="!hasActiveFilters">
-      Сбросить параметры
-      <SvgoIcon class="apartments__reset-btn-icon" name="close" />
-    </button>
+          <section class="apartments__filter apartments__filter--area">
+            <h2 class="apartments__filter-title">Площадь, м²</h2>
+            <div class="apartments__range-values">
+              <span class="apartments__range-value" id="area-min">от <span class="value">{{ areaRange[0] }}</span></span>
+              <span class="apartments__range-value" id="area-max">до <span class="value">{{ areaRange[1] }}</span></span>
+            </div>
+            <div class="apartments__range-slider">
+              <VueSlider 
+                v-if="slidersReady && stats" 
+                class="apartments__range"
+                v-model="areaRange" 
+                :disabled="areaBounds[0] === areaBounds[1]"
+                :min="areaBounds[0]" 
+                :max="areaBounds[1]" 
+                :interval="areaInterval"
+                :process-style="{ backgroundColor: '#3EB57C', height: '3px' }" 
+                :rail-style="{ height: '3px' }"
+                :dot-style="{ backgroundColor: '#3EB57C', boxShadow: 'none' }" 
+                :tooltip-style="{ backgroundColor: '#3EB57C', color: 'white', fontWeight: '500' }"
+                @change="handleAreaChange" />
+            </div>
+          </section>
+
+          <button type="button" class="apartments__reset-btn" @click="resetFilters" :disabled="!hasActiveFilters">
+            Сбросить параметры
+            <SvgoIcon class="apartments__reset-btn-icon" name="close" />
+          </button>
+      </div>
+    </transition>
   </aside>
 </template>
 
@@ -91,7 +112,7 @@ const availableRooms = computed(() => {
 
 const hasActiveFilters = computed(() => {
   return (
-    filters.value.rooms.length > 0 ||
+    filters.value.rooms && filters.value.rooms.length > 0 ||
     filters.value.minPrice !== undefined ||
     filters.value.maxPrice !== undefined ||
     filters.value.minArea !== undefined ||
@@ -162,13 +183,20 @@ onMounted(() => {
 <style scoped lang="sass">
 .apartments__filters
   width: 37%
-  display: flex
-  flex-direction: column
   background: linear-gradient(135deg, rgba(174, 228, 178, 0.3) 0%, rgba(149, 208, 161, 0.3) 100%)
   height: fit-content
   padding: 40px
   border-radius: 10px
-  gap: 24px
+
+  &--content
+    display: flex
+    flex-direction: column
+    gap: 24px
+  
+  &--loader
+    height: 293px
+    @media (max-width: 768px)
+      height: 283px
 
   @media (max-width: 960px)
     padding: 20px
@@ -203,7 +231,7 @@ onMounted(() => {
           
 
           &.active
-            background-color: #2ecc71
+            background-color: #3EB57C
             color: white
             box-shadow: 0px 6px 20px 0px #95D0A1
 
@@ -261,4 +289,11 @@ onMounted(() => {
     height: 8px
     margin-left: 3px
     transition: transform 0.2s ease-in-out, color 0.2s ease-in-out
+</style>
+
+<style lang="sass">
+.vue-slider-dot-tooltip-inner 
+  background-color: #3EB57C !important
+  &-top::after 
+    border-top-color: #3EB57C !important
 </style>

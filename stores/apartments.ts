@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import type { Apartment, ApartmentFilters, ApartmentStats, Pagination } from '@/types/apartment';
+import { SortDirection, type Apartment, type ApartmentFilters, type ApartmentStats, type Pagination } from '@/types/apartment';
 
 const FILTERS_KEY = 'apartments_filters'
 
@@ -28,10 +28,7 @@ export const useApartmentsStore = defineStore('apartments', () => {
   const state = reactive<ApartmentsState>({
     apartments: [],
     stats: null,
-    filters: {
-      rooms: [],
-      sortDir: 'asc'
-    },
+    filters: {},
     pagination: {
       page: 1,
       perPage: 20,
@@ -42,7 +39,7 @@ export const useApartmentsStore = defineStore('apartments', () => {
     error: null
   });
 
-  const fetchApartments = async (options: { append?: boolean; filters?: Partial<ApartmentFilters> } = {}) => {
+  const fetchApartments = async (options: { append?: boolean; filters?: ApartmentFilters } = {}) => {
     const { append = false, filters } = options;
     
     if (!append) {
@@ -93,15 +90,15 @@ export const useApartmentsStore = defineStore('apartments', () => {
     state.pagination.page = 1;
     await fetchApartments();
   };
-
+  
   const toggleSort = async (column: ApartmentFilters['sortBy']) => {
     if (state.filters.sortBy !== column) {
       await updateFilter('sortBy', column);
-      await updateFilter('sortDir', 'asc');
+      await updateFilter('sortDir', SortDirection.Asc);
     } else {
       const nextDir = 
-        state.filters.sortDir === 'asc' ? 'desc' :
-        state.filters.sortDir === 'desc' ? undefined : 'asc';
+        state.filters.sortDir === SortDirection.Asc ? SortDirection.Desc :
+        state.filters.sortDir === SortDirection.Desc ? undefined : SortDirection.Asc;
       
       if (nextDir) {
         await updateFilter('sortDir', nextDir);
@@ -113,10 +110,7 @@ export const useApartmentsStore = defineStore('apartments', () => {
   };
 
   const resetFilters = async () => {
-    state.filters = {
-      rooms: [],
-      sortDir: 'asc'
-    };
+    state.filters = {};
     await fetchApartments();
   };
 
