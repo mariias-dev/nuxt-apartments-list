@@ -1,109 +1,124 @@
-import { defineStore } from 'pinia'
-import type { Apartment } from '@/types/apartment'
+import { defineStore } from 'pinia';
+import type { Apartment, ApartmentFilters, ApartmentStats, Pagination } from '@/types/apartment';
 
-interface ApartmentStats {
-  minPrice: number
-  maxPrice: number
-  minArea: number
-  maxArea: number
-  availableRooms: number[]
+interface ApartmentsState {
+  apartments: Apartment[];
+  stats: ApartmentStats | null;
+  filters: ApartmentFilters;
+  pagination: Pagination;
+  loading: boolean;
+  initialLoading: boolean;
+  error: string | null;
 }
 
 export const useApartmentsStore = defineStore('apartments', () => {
-  const apartments = ref<Apartment[]>([])
-  const stats = ref<ApartmentStats | null>(null)
-  const loading = ref(false)
-  const error = ref<string | null>(null)
-  const filters = ref({
-    minPrice: undefined as number | undefined,
-    maxPrice: undefined as number | undefined,
-    minArea: undefined as number | undefined,
-    maxArea: undefined as number | undefined,
-    rooms: [] as number[],
-    sortBy: undefined as 'area' | 'floor' | 'price' | undefined,
-    sortDir: 'asc' as 'asc' | 'desc' | undefined
-  })
-  
-  const pagination = ref({
-    page: 1,
-    perPage: 20,
-    total: 0
-  })
+  const state = reactive<ApartmentsState>({
+    apartments: [],
+    stats: null,
+    filters: {
+      rooms: [],
+      sortDir: 'asc'
+    },
+    pagination: {
+      page: 1,
+      perPage: 20,
+      total: 0
+    },
+    loading: false,
+    initialLoading: true,
+    error: null
+  });
 
-  const initialLoading = ref(true)
-
-  const fetchApartments = async (append = false) => {
+  const fetchApartments = async (options: { append?: boolean; filters?: Partial<ApartmentFilters> } = {}) => {
+    const { append = false, filters } = options;
+    
     if (!append) {
-      initialLoading.value = true
+      state.initialLoading = true;
+      state.pagination.page = 1;
     }
-    loading.value = true
-    error.value = null
+    
+    state.loading = true;
+    state.error = null;
 
     try {
-      const params = new URLSearchParams()
+      const effectiveFilters = filters ? { ...state.filters, ...filters } : state.filters;
       
-      if (filters.value.minPrice) params.set('minPrice', filters.value.minPrice.toString())
-      if (filters.value.maxPrice) params.set('maxPrice', filters.value.maxPrice.toString())
-      if (filters.value.minArea) params.set('minArea', filters.value.minArea.toString())
-      if (filters.value.maxArea) params.set('maxArea', filters.value.maxArea.toString())
-      if (filters.value.rooms.length) params.set('rooms', filters.value.rooms.join(','))
-      if (filters.value.sortBy) params.set('sortBy', filters.value.sortBy)
-      if (filters.value.sortDir) params.set('sortDir', filters.value.sortDir)
-        
-      params.set('page', pagination.value.page.toString())
-      params.set('perPage', pagination.value.perPage.toString())
+      const params = new URLSearchParams();
+      Object.entries(effectiveFilters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.set(key, Array.isArray(value) ? value.join(',') : String(value));
+        }
+      });
+      
+      params.set('page', state.pagination.page.toString());
+      params.set('perPage', state.pagination.perPage.toString());
 
-      const res = await fetch(`/api/apartments?${params}`)
-      if (!res.ok) throw new Error(res.statusText)
-
-      const data = await res.json()
-
+      const res = await $fetch(`/api/apartments?${params}`);
+      
       if (append) {
-        apartments.value = [...apartments.value, ...data.data]
+        state.apartments = [...state.apartments, ...res.data];
       } else {
-        apartments.value = data.data
+        state.apartments = res.data;
+        state.stats = res.stats;
       }
-      pagination.value.total = data.total
-      stats.value = data.stats
+      
+      state.pagination.total = res.pagination.total;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Unknown error'
-      if (!append) apartments.value = []
+      state.error = err instanceof Error ? err.message : 'Unknown error';
+      if (!append) {
+        state.apartments = [];
+        state.stats = null;
+      }
     } finally {
-      loading.value = false
-      if (!append) initialLoading.value = false
+      state.loading = false;
+      if (!append) state.initialLoading = false;
     }
-  }
+  };
 
-  const resetFilters = () => {
-    filters.value = {
-      minPrice: undefined,
-      maxPrice: undefined,
-      minArea: undefined,
-      maxArea: undefined,
+  const updateFilter = async <K extends keyof ApartmentFilters>(key: K, value: ApartmentFilters[K]) => {
+    state.filters[key] = value;
+    state.pagination.page = 1;
+    await fetchApartments();
+  };
+
+  const toggleSort = async (column: ApartmentFilters['sortBy']) => {
+    if (state.filters.sortBy !== column) {
+      await updateFilter('sortBy', column);
+      await updateFilter('sortDir', 'asc');
+    } else {
+      const nextDir = 
+        state.filters.sortDir === 'asc' ? 'desc' :
+        state.filters.sortDir === 'desc' ? undefined : 'asc';
+      
+      if (nextDir) {
+        await updateFilter('sortDir', nextDir);
+      } else {
+        await updateFilter('sortBy', undefined);
+        await updateFilter('sortDir', undefined);
+      }
+    }
+  };
+
+  const resetFilters = async () => {
+    state.filters = {
       rooms: [],
-      sortBy: undefined,
       sortDir: 'asc'
-    }
-    pagination.value.page = 1
-    fetchApartments()
-  }
+    };
+    await fetchApartments();
+  };
 
-  const loadMore = () => {
-    if (loading.value || apartments.value.length >= pagination.value.total) return
-    pagination.value.page += 1
-    fetchApartments(true) 
-  }
+  const loadMore = async () => {
+    if (state.loading || state.apartments.length >= state.pagination.total) return;
+    state.pagination.page += 1;
+    await fetchApartments({ append: true });
+  };
 
   return { 
-    apartments, 
-    stats, 
-    filters, 
-    pagination,
-    initialLoading,
-    loading, 
-    error,
+    ...toRefs(state),
     fetchApartments,
+    updateFilter,
+    toggleSort,
     resetFilters,
     loadMore
-  }
-})
+  };
+});

@@ -103,7 +103,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useApartmentsStore } from "@/stores/apartments";
 
 const store = useApartmentsStore();
-const { apartments, fetchApartments, loadMore } = store;
+const { apartments, fetchApartments, loadMore, toggleSort } = store;
 
 const showScrollButton = ref(false);
 
@@ -128,33 +128,6 @@ const getColumnClasses = (column: 'area' | 'floor' | 'price') => computed(() => 
 const areaColClasses = getColumnClasses('area');
 const floorColClasses = getColumnClasses('floor');
 const priceColClasses = getColumnClasses('price');
-
-function toggleSort(column: "area" | "floor" | "price") {
-  const { sortBy, sortDir } = store.filters;
-
-  if (sortBy !== column) {
-    store.filters.sortBy = column;
-    store.filters.sortDir = "asc";
-    store.pagination.page = 1;
-    store.fetchApartments();
-    return;
-  }
-
-  switch (sortDir) {
-    case "asc":
-      store.filters.sortDir = "desc";
-      break;
-    case "desc":
-      store.filters.sortBy = undefined;
-      store.filters.sortDir = undefined;
-      break;
-    default:
-      store.filters.sortDir = "asc";
-  }
-
-  store.pagination.page = 1;
-  store.fetchApartments();
-}
 
 function handleScroll() {
   showScrollButton.value = window.scrollY > 200;

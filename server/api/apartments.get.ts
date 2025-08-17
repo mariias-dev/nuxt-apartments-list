@@ -1,89 +1,97 @@
-import { readFile } from 'fs/promises'
-import { join } from 'path'
-import type { Apartment } from '@/types/apartment'
+import { readFile } from 'fs/promises';
+import { join } from 'path';
+import type { Apartment, ApartmentFilters, ApartmentStats, Pagination } from '@/types/apartment';
 
-export default defineEventHandler(async (event) => {
-  const query = getQuery(event)
+interface ApiResponse {
+  data: Apartment[];
+  pagination: Pagination;
+  stats: ApartmentStats;
+}
 
-  const filePath = join(process.cwd(), 'server/data/apartments.json')
-  const file = await readFile(filePath, 'utf-8')
-  const apartments: Apartment[] = JSON.parse(file)
+export default defineEventHandler(async (event): Promise<ApiResponse> => {
+  const query = getQuery(event);
+  
+  const filePath = join(process.cwd(), 'server/data/apartments.json');
+  const apartments: Apartment[] = JSON.parse(await readFile(filePath, 'utf-8'));
 
-  let roomFiltered = [...apartments]
-  if (query.rooms) {
-    const rooms = (Array.isArray(query.rooms) ? query.rooms : String(query.rooms).split(','))
-      .map(Number)
-      .filter(n => !isNaN(n))
+  const roomFiltered = applyRoomFilter(apartments, parseNumberArray(query.rooms?.toString()));
+  
+  const baseStats = getBaseStats(roomFiltered, apartments);
 
-    if (rooms.length) {
-      roomFiltered = roomFiltered.filter(a => rooms.includes(a.rooms))
-    }
-  }
+  const fullyFiltered = applyOtherFilters(roomFiltered, {
+    minPrice: query.minPrice ? Number(query.minPrice) : undefined,
+    maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
+    minArea: query.minArea ? Number(query.minArea) : undefined,
+    maxArea: query.maxArea ? Number(query.maxArea) : undefined,
+    sortBy: query.sortBy as ApartmentFilters['sortBy'],
+    sortDir: query.sortDir as ApartmentFilters['sortDir']
+  });
 
-  const minPrice = roomFiltered.length ? Math.min(...roomFiltered.map(a => a.price)) : 0
-  const maxPrice = roomFiltered.length ? Math.max(...roomFiltered.map(a => a.price)) : 0
-  const minArea  = roomFiltered.length ? Math.min(...roomFiltered.map(a => a.area)) : 0
-  const maxArea  = roomFiltered.length ? Math.max(...roomFiltered.map(a => a.area)) : 0
-
-  let filtered = [...roomFiltered]
-
-  if (query.minPrice) {
-    const minPrice = Math.max(0, Number(query.minPrice))
-    filtered = filtered.filter(a => a.price >= minPrice)
-  }
-  if (query.maxPrice) {
-    const maxPrice = Math.max(0, Number(query.maxPrice))
-    filtered = filtered.filter(a => a.price <= maxPrice)
-  }
-
-  if (query.minArea) {
-    const minArea = Math.max(0, Number(query.minArea))
-    filtered = filtered.filter(a => a.area >= minArea)
-  }
-  if (query.maxArea) {
-    const maxArea = Math.max(0, Number(query.maxArea))
-    filtered = filtered.filter(a => a.area <= maxArea)
-  }
-
-  if (query.sortBy && query.sortDir) {
-    const sortBy = String(query.sortBy)
-    const sortDir = query.sortDir === 'desc' ? -1 : 1
-
-    filtered.sort((a, b) => {
-      let valA: number = 0
-      let valB: number = 0
-
-      if (sortBy === 'area') {
-        valA = a.area
-        valB = b.area
-      } else if (sortBy === 'floor') {
-        valA = a.floor
-        valB = b.floor
-      } else if (sortBy === 'price') {
-        valA = a.price
-        valB = b.price
-      }
-
-      return (valA - valB) * sortDir
-    })
-  }
-
-  const page = Math.max(1, Number(query.page ?? 1))
-  const perPage = Math.min(50, Math.max(1, Number(query.perPage ?? 20)))
-  const start = (page - 1) * perPage
-  const paginated = filtered.slice(start, start + perPage)
+  const pagination = getPagination(query, fullyFiltered.length);
+  const paginated = fullyFiltered.slice(pagination.start, pagination.start + pagination.perPage);
 
   return {
-    total: filtered.length,
+    data: paginated,
+    pagination,
+    stats: {
+      ...baseStats,
+      availableRooms: Array.from(new Set(apartments.map(a => a.rooms))).sort((a, b) => a - b),
+    }
+  };
+});
+
+function applyRoomFilter(apartments: Apartment[], rooms: number[]): Apartment[] {
+  if (!rooms.length) return [...apartments];
+  return apartments.filter(a => rooms.includes(a.rooms));
+}
+
+function getBaseStats(filtered: Apartment[], allApartments: Apartment[]): Omit<ApartmentStats, 'availableRooms'> {
+  return {
+    minPrice: filtered.length ? Math.min(...filtered.map(a => a.price)) : 0,
+    maxPrice: filtered.length ? Math.max(...filtered.map(a => a.price)) : 0,
+    minArea: filtered.length ? Math.min(...filtered.map(a => a.area)) : 0,
+    maxArea: filtered.length ? Math.max(...filtered.map(a => a.area)) : 0,
+  };
+}
+
+function applyOtherFilters(apartments: Apartment[], filters: Omit<ApartmentFilters, 'rooms'>): Apartment[] {
+  let result = [...apartments];
+
+  if (filters.minPrice) {
+    result = result.filter(a => a.price >= filters.minPrice!);
+  }
+  if (filters.maxPrice) {
+    result = result.filter(a => a.price <= filters.maxPrice!);
+  }
+
+  if (filters.minArea) {
+    result = result.filter(a => a.area >= filters.minArea!);
+  }
+  if (filters.maxArea) {
+    result = result.filter(a => a.area <= filters.maxArea!);
+  }
+
+  if (filters.sortBy && filters.sortDir) {
+    const sortDir = filters.sortDir === 'desc' ? -1 : 1;
+    result.sort((a, b) => (a[filters.sortBy!] - b[filters.sortBy!]) * sortDir);
+  }
+
+  return result;
+}
+
+function parseNumberArray(input?: string | string[]): number[] {
+  if (!input) return [];
+  const items = Array.isArray(input) ? input : String(input).split(',');
+  return items.map(Number).filter(n => !isNaN(n));
+}
+
+function getPagination(query: any, total: number) {
+  const page = Math.max(1, Number(query.page ?? 1));
+  const perPage = Math.min(50, Math.max(1, Number(query.perPage ?? 20)));
+  return {
     page,
     perPage,
-    data: paginated,
-    stats: {
-      minPrice: minPrice,
-      maxPrice: maxPrice,
-      minArea: minArea,
-      maxArea: maxArea,
-      availableRooms: [...new Set(apartments.map(a => a.rooms))].sort()
-    }
-  }
-})
+    total,
+    start: (page - 1) * perPage
+  };
+}

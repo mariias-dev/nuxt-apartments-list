@@ -57,32 +57,15 @@ import { storeToRefs } from 'pinia'
 const store = useApartmentsStore()
 const { stats, filters } = storeToRefs(store)
 
-watch(() => stats.value, (newStats) => updateSliderValues(newStats), { immediate: true })
-
-const priceInterval = computed(() => 1000)
-const areaInterval = computed(() => 0.1)
-
-const availableRooms = computed(() => {
-  return stats.value?.availableRooms || []
-})
-
-const hasActiveFilters = computed(() => {
-  return (
-    filters.value.rooms.length > 0 ||
-    filters.value.minPrice !== undefined ||
-    filters.value.maxPrice !== undefined ||
-    filters.value.minArea !== undefined ||
-    filters.value.maxArea !== undefined
-  )
-})
-
-const slidersReady = ref(false)
-
 const priceRange = ref<[number, number]>([0, 0])
 const priceBounds = ref<[number, number]>([0, 0])
 
 const areaRange = ref<[number, number]>([0, 0])
 const areaBounds = ref<[number, number]>([0, 0])
+const priceInterval = computed(() => 1000)
+const areaInterval = computed(() => 0.1)
+
+watch(() => stats.value, (newStats) => updateSliderValues(newStats), { immediate: true })
 
 function updateSliderValues(newStats = stats.value) {
   if (!newStats) return
@@ -102,6 +85,22 @@ function updateSliderValues(newStats = stats.value) {
   slidersReady.value = true
 }
 
+const availableRooms = computed(() => {
+  return stats.value?.availableRooms || []
+})
+
+const hasActiveFilters = computed(() => {
+  return (
+    filters.value.rooms.length > 0 ||
+    filters.value.minPrice !== undefined ||
+    filters.value.maxPrice !== undefined ||
+    filters.value.minArea !== undefined ||
+    filters.value.maxArea !== undefined
+  )
+})
+
+const slidersReady = ref(false)
+
 const formatNumber = (value: number) => {
   return new Intl.NumberFormat('ru-RU').format(value)
 }
@@ -112,8 +111,12 @@ const formatPriceTooltip = (value: number) => {
 
 const toggleRoom = (n: number) => {
   const rooms = new Set(filters.value.rooms)
-  if (rooms.has(n)) rooms.delete(n)
-  else rooms.add(n)
+  if (rooms.has(n)) {
+    rooms.delete(n)
+  } else {
+    rooms.add(n)
+  }
+  
   filters.value.rooms = Array.from(rooms)
   store.fetchApartments()
 }
