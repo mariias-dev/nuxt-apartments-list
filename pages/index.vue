@@ -2,78 +2,95 @@
   <section class="apartments">
     <div class="apartments__list">
       <h1 class="apartments__title">Квартиры</h1>
-      <transition name="fade-list" mode="out-in">
-        <div v-if="!loading && apartments.length">
-          <header class="apartments__header">
-            <span class="apartments__col apartments__col--layout">Планировка</span>
-            <span class="apartments__col apartments__col--type">Квартира</span>
+      <header role="row" class="apartments__header">
+        <span role="columnheader" class="apartments__col apartments__col--layout">Планировка</span>
+        <span role="columnheader" class="apartments__col apartments__col--type">Квартира</span>
 
-            <div class="apartments__col apartments__col--area apartments__col--active apartments__col--desc">
-
-              <button class="apartments__sort" type="button" title="Сортировать по площади">
-                <span>S, м²</span>
-                <div class="apartments__sort-arrows">
-                  <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true"
-                    name="caret-up" />
-                  <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
-                    name="caret-down" />
-                </div>
-
-              </button>
+        <div role="columnheader" class="apartments__col apartments__col--area" :aria-sort="areaSortStatus"
+          :class="areaColClasses">
+          <button class="apartments__sort" type="button" title="Сортировать по площади" @click="toggleSort('area')">
+            <span>S, м²</span>
+            <div class="apartments__sort-arrows">
+              <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" :class="{
+                active:
+                  store.filters.sortBy === 'area' &&
+                  store.filters.sortDir === 'asc',
+              }" name="caret-up" />
+              <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" :class="{
+                active:
+                  store.filters.sortBy === 'area' &&
+                  store.filters.sortDir === 'desc',
+              }" name="caret-down" />
             </div>
-
-            <div class="apartments__col apartments__col--floor">
-
-              <button class="apartments__sort" type="button" title="Сортировать по этажу">
-                <span>Этаж</span>
-                <div class="apartments__sort-arrows">
-                  <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true"
-                    name="caret-up" />
-                  <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
-                    name="caret-down" />
-                </div>
-              </button>
-            </div>
-
-            <div class="apartments__col apartments__col--price">
-
-
-              <button class="apartments__sort" type="button" title="Сортировать по цене">
-                <span>Цена, ₽</span>
-                <div class="apartments__sort-arrows">
-                  <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" aria-hidden="true"
-                    name="caret-up" />
-                  <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" aria-hidden="true"
-                    name="caret-down" />
-                </div>
-
-              </button>
-            </div>
-          </header>
-
-          <ul class="apartments__items" key="list">
-            <ApartmentCard v-for="apartment in apartments" :key="apartment.id" :apartment="apartment" />
-          </ul>
-
-          <button :disabled="isLoadingMore" :aria-busy="isLoadingMore"
-            class="apartments__more" type="button">
-            <span v-if="!isLoadingMore">Загрузить еще</span>
-            <span v-else>...</span>
           </button>
         </div>
-        <div v-else-if="loading" class="spinner" key="spinner">
+
+        <div role="columnheader" class="apartments__col apartments__col--floor" :aria-sort="floorSortStatus"
+          :class="floorColClasses">
+          <button class="apartments__sort" type="button" title="Сортировать по этажу" @click="toggleSort('floor')">
+            <span>Этаж</span>
+            <div class="apartments__sort-arrows">
+              <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" :class="{
+                active:
+                  store.filters.sortBy === 'floor' &&
+                  store.filters.sortDir === 'asc',
+              }" name="caret-up" />
+              <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" :class="{
+                active:
+                  store.filters.sortBy === 'floor' &&
+                  store.filters.sortDir === 'desc',
+              }" name="caret-down" />
+            </div>
+          </button>
+        </div>
+
+        <div role="columnheader" class="apartments__col apartments__col--price" :aria-sort="priceSortStatus"
+          :class="priceColClasses">
+          <button class="apartments__sort" type="button" title="Сортировать по цене" @click="toggleSort('price')">
+            <span>Цена, ₽</span>
+            <div class="apartments__sort-arrows">
+              <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--up" :class="{
+                active:
+                  store.filters.sortBy === 'price' &&
+                  store.filters.sortDir === 'asc',
+              }" name="caret-up" />
+              <SvgoIcon class="apartments__sort-arrow apartments__sort-arrow--down" :class="{
+                active:
+                  store.filters.sortBy === 'price' &&
+                  store.filters.sortDir === 'desc',
+              }" name="caret-down" />
+            </div>
+          </button>
+        </div>
+      </header>
+      <transition name="fade-list" mode="out-in">
+        <div v-if="store.initialLoading" aria-live="polite" role="status" class="spinner" key="spinner">
           <div class="spinner__circle"></div>
         </div>
-        <div v-else-if="error" class="apartments__error" key="error">
+
+        <div v-else-if="store.apartments.length">
+          <ul role="rowgroup" class="apartments__items" key="list">
+            <ApartmentCard v-for="apartment in store.apartments" :key="apartment.id" :apartment="apartment" />
+          </ul>
+
+          <button v-if="
+            !store.loading && store.apartments.length < store.pagination.total
+          " :disabled="store.loading" class="apartments__more" type="button" @click="loadMore">
+            <span>Загрузить еще</span>
+          </button>
+        </div>
+        <div v-else-if="store.error" class="apartments__error" key="error">
           Произошла ошибка при загрузке данных
         </div>
-        <div v-else-if="apartmentsStore.loaded && !apartments.length" class="apartments__empty" key="empty">
-          Нет доступных квартир
+
+        <div v-else class="apartments__empty" key="empty">
+          По данным фильтрам ничего не найдено
         </div>
       </transition>
     </div>
 
-    <ApartmentFilters></ApartmentFilters>
+    <ApartmentFilters />
+
     <button @click="scrollToTop" class="apartments__to-top" type="button" aria-label="Прокрутить вверх"
       :class="{ 'apartments__to-top--hidden': !showScrollButton }">
       <SvgoIcon aria-hidden="true" class="apartments__to-top-icon" name="arrow" />
@@ -82,40 +99,95 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import { useApartmentsStore } from '@/stores/apartments'
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useApartmentsStore } from "@/stores/apartments";
 
-const apartmentsStore = useApartmentsStore()
-const { apartments, loading, error } = storeToRefs(apartmentsStore)
-const { fetchApartments } = apartmentsStore
+const store = useApartmentsStore();
+const { apartments, fetchApartments, loadMore } = store;
 
-onMounted(() => {
-  fetchApartments()
-})
+const showScrollButton = ref(false);
 
-const showScrollButton = ref(false)
+const getSortStatus = (column: 'area' | 'floor' | 'price') => computed(() => {
+  if (store.filters.sortBy !== 'area') return 'none';
+  return store.filters.sortDir === 'asc'
+    ? 'ascending'
+    : store.filters.sortDir === 'desc'
+      ? 'descending'
+      : 'none';
+});
+const areaSortStatus = getSortStatus('area');
+const floorSortStatus = getSortStatus('floor');
+const priceSortStatus = getSortStatus('price');
+
+const getColumnClasses = (column: 'area' | 'floor' | 'price') => computed(() => ({
+  'apartments__col--active': store.filters.sortBy === column,
+  'apartments__col--desc': store.filters.sortBy === column && store.filters.sortDir === 'desc',
+  'apartments__col--asc': store.filters.sortBy === column && store.filters.sortDir === 'asc'
+}));
+
+const areaColClasses = getColumnClasses('area');
+const floorColClasses = getColumnClasses('floor');
+const priceColClasses = getColumnClasses('price');
+
+function toggleSort(column: "area" | "floor" | "price") {
+  const { sortBy, sortDir } = store.filters;
+
+  if (sortBy !== column) {
+    store.filters.sortBy = column;
+    store.filters.sortDir = "asc";
+    store.pagination.page = 1;
+    store.fetchApartments();
+    return;
+  }
+
+  switch (sortDir) {
+    case "asc":
+      store.filters.sortDir = "desc";
+      break;
+    case "desc":
+      store.filters.sortBy = undefined;
+      store.filters.sortDir = undefined;
+      break;
+    default:
+      store.filters.sortDir = "asc";
+  }
+
+  store.pagination.page = 1;
+  store.fetchApartments();
+}
+
+function handleScroll() {
+  showScrollButton.value = window.scrollY > 200;
+}
+
 function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 onMounted(() => {
-  const onScroll = () => {
-    showScrollButton.value = window.scrollY > 200
+  window.addEventListener("scroll", handleScroll);
+  handleScroll();
+
+  if (apartments.length === 0) {
+    fetchApartments();
   }
-  window.addEventListener('scroll', onScroll)
-  onScroll()
+});
 
-  onBeforeUnmount(() => {
-    window.removeEventListener('scroll', onScroll)
-  })
-})
-
+onBeforeUnmount(() => {
+  window.removeEventListener("scroll", handleScroll);
+});
 </script>
 
 <style scoped lang="sass">
 .apartments
   display: flex
   gap: 80px
+
+  &__empty, &__error
+    text-align: center
+    color: #7D7D7D
+    margin-top: 50px
+
   @media (max-width: 960px)
     gap: 28px
 
@@ -322,18 +394,24 @@ onMounted(() => {
   to
     transform: rotate(360deg)
 
-.fade-list-enter-active,
-.fade-list-leave-active 
-  transition: all 0.3s ease
-
+.fade-list-enter-active
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1) // пружинящий эффект
+.fade-list-leave-active
+  transition: all 0.25s ease-in
 
 .fade-list-enter-from
   opacity: 0
-  transform: translateY(20px)
+  transform: translateY(30px) scale(0.95) rotateX(10deg)
 
-.fade-list-leave-to 
+.fade-list-enter-to
+  opacity: 1
+  transform: translateY(0) scale(1) rotateX(0)
+
+.fade-list-leave-from
+  opacity: 1
+  transform: translateY(0) scale(1) rotateX(0)
+
+.fade-list-leave-to
   opacity: 0
-  transform: translateY(-20px)
-
-
+  transform: translateY(-20px) scale(0.9) rotateX(-5deg)
 </style>

@@ -1,13 +1,13 @@
 <template>
-<li class="apartment-card">
+<li class="apartment-card" role="row">
   <img :src="props.apartment.plan" 
-       :alt="`Планировка: ${props.apartment.type}-комнатная квартира`"
+       :alt="`Планировка: ${props.apartment.rooms}-комнатная квартира`"
        class="apartment-card__plan" 
        loading="lazy" />
 
   <div class="apartment-card__info">
     <span class="apartment-card__type">
-      {{ props.apartment.type }}-комнатная № {{ props.apartment.id }}
+      {{ props.apartment.rooms }}-комнатная № {{ props.apartment.id }}
     </span>
 
     <div class="apartment-card__details">
@@ -30,20 +30,11 @@
 
 <script setup lang="ts">
 import { formatPrice } from '@/utils/formatters'
-interface Apartment {
-  id: number
-  plan: string
-  type: number
-  area: number
-  floor: number
-  totalFloors: number
-  price: number
-}
+import type { Apartment } from '~/types/apartment';
 
 const props = defineProps<{
   apartment: Apartment
 }>()
-
 </script>
 
 <style scoped lang="sass">
@@ -82,8 +73,6 @@ const props = defineProps<{
       flex: 1
       font-weight: 500
     
-    
-
   &__area,
   &__floor,
   &__price

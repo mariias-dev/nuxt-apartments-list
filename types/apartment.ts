@@ -1,7 +1,7 @@
 export interface Apartment {
   id: number
   plan: string
-  type: number
+  rooms: number
   area: number
   floor: number
   totalFloors: number
