@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import type { Apartment, ApartmentFilters, ApartmentStats, Pagination } from '@/types/apartment';
 
+const FILTERS_KEY = 'apartments_filters'
+
 interface ApartmentsState {
   apartments: Apartment[];
   stats: ApartmentStats | null;
@@ -12,6 +14,17 @@ interface ApartmentsState {
 }
 
 export const useApartmentsStore = defineStore('apartments', () => {
+  onMounted(() => {
+    const saved = localStorage.getItem(FILTERS_KEY)
+    if (saved) {
+      Object.assign(state.filters, JSON.parse(saved))
+    }
+
+    watch(() => state.filters, (val) => {
+      localStorage.setItem(FILTERS_KEY, JSON.stringify(val))
+    }, { deep: true })
+  })
+
   const state = reactive<ApartmentsState>({
     apartments: [],
     stats: null,
